@@ -27,10 +27,12 @@ map<string, map<int, vector<vector<size_t>>>> shortestToAllWithPathes(const vect
     std::map<string, int> unvisited;
     std::map<string, vector<vector<size_t>>> paths;
     
+    // we will be visiting this for every path
     vector<string> nodeHistory;
     
     int maxSteps = 0;
     
+    // find current index
     auto iter1 = find(names.begin(), names.end(), origin);
     int currIndex = iter1-names.begin();
     
@@ -47,11 +49,12 @@ map<string, map<int, vector<vector<size_t>>>> shortestToAllWithPathes(const vect
         }
     }
     
-    // start of step 1 (adding origin to visited list) //
+    // start of step 1 (adding origin to visited list and adding path to itself in the other map) //
     string current = origin;
     vector<size_t> originPath;
     originPath.push_back(currIndex);
     
+    //update unvisited cost values
     for (int i = 0; i < names.size(); i++)
     {
         if (unvisited.find(names[i]) != unvisited.end())
@@ -67,10 +70,12 @@ map<string, map<int, vector<vector<size_t>>>> shortestToAllWithPathes(const vect
             
     }
     
+    // update visited and paths maps
     visited.insert(pair<string, int>(current, unvisited[current]));
     paths.insert(pair<string,vector<vector<size_t>>>(current, vector<vector<size_t>>()));
     paths[current].push_back(originPath);
     
+    // remove visited node from unvisited and then store it in history
     auto it = unvisited.find(current);
     unvisited.erase(it);
     nodeHistory.push_back(current);
@@ -78,13 +83,13 @@ map<string, map<int, vector<vector<size_t>>>> shortestToAllWithPathes(const vect
     // end of step 1 //
     
     
-    // start of step 2 //
+    // start of steps 2 to n names
     
-    while (maxSteps != names.size()-1) {
+ while (maxSteps != names.size()-1) {
         
     int max = 10001;
     
-    // find next min node //
+    // find next min node
     for (int i = 0; i < names.size(); i++)
     {
         if (visited.find(names[i]) == visited.end())
@@ -98,11 +103,11 @@ map<string, map<int, vector<vector<size_t>>>> shortestToAllWithPathes(const vect
     }
     
     
-    // find current index //
+    // find current index
     iter1 = find(names.begin(), names.end(), current);
     currIndex = iter1-names.begin();
     
-    // update unvisited node values //
+    // update unvisited node values
     for (int i = 0; i < names.size(); i++)
     {
             if (unvisited.find(names[i]) != unvisited.end())
@@ -119,9 +124,8 @@ map<string, map<int, vector<vector<size_t>>>> shortestToAllWithPathes(const vect
     }
     
     
-    // check paths //
+    // get paths to each destination
     
-        
     for (int i = nodeHistory.size()-1; i != -1; i--)
     {
         int j = 0;
@@ -141,7 +145,8 @@ map<string, map<int, vector<vector<size_t>>>> shortestToAllWithPathes(const vect
         }
         
     }
-        
+    
+    // add paths
     for (int k = 0; k < paths[current].size(); k++)
     {
         paths[current][k].push_back(currIndex);
@@ -154,16 +159,16 @@ map<string, map<int, vector<vector<size_t>>>> shortestToAllWithPathes(const vect
     unvisited.erase(it2);
     nodeHistory.push_back(current);
     maxSteps++;
-}
+        
+} // end of steps 2 to n names //
     
-    // end of steps 2 to number of names //
     
+    // at the end, add the destination to the end of every path stored 
     for (int i = 0; i < names.size(); i++)
     {
         allPaths.insert(make_pair(names[i], std::map<int, vector<vector<size_t>>>()));
         allPaths[names[i]].insert(make_pair(visited[names[i]], paths[names[i]]));
     }
-    
     
     return allPaths;
     
@@ -177,6 +182,7 @@ vector<vector<size_t>> dijkstra(const vector<vector<double>>& map, const vector<
     
     std::map<int, vector<vector<size_t>>> info = allPaths[target];
     
+    // get cost
     if ((info.begin()->second).empty() == true)
     {
         cost = -1;
@@ -185,6 +191,8 @@ vector<vector<size_t>> dijkstra(const vector<vector<double>>& map, const vector<
     {
         cost = info.begin()->first;
     }
+    
+    // merge info from helper function
     
     vector<vector<size_t>> destinationInfo;
     
