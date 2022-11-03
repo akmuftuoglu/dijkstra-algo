@@ -1,6 +1,10 @@
-//
-//  dijkstra.cpp
-//  HW4 PIC10C
+
+/*
+PIC 10C Homework 4, dijkstra.cpp
+Purpose: Implement Dijkstra's Algorithm
+Author: Aral Muftuoglu
+Date: 11/03/2021
+*/
 
 #include <iostream>
 #include <stdio.h>
@@ -9,48 +13,23 @@
 #include <iterator>
 #include <map>
 #include <algorithm>
+#include <stack>
 
 #include "dijkstra.h"
 
 using namespace std;
 
-
-vector<vector<size_t>> dijkstra(const vector<vector<double>>& map, const vector<string>& names, string origin, string target, double& cost) {
-    
-    
-    //auto iter1 = find(names.begin(), names.end(), origin);
-    //int originIndex = iter1-names.begin();
-    
-    //auto iter2 = find(names.begin(), names.end(), target);
-    //int targetIndex = iter2-names.begin();
-    
-   
-    vector<vector<size_t>> returnInfo;
-    return returnInfo;
-}
-
-
-
-
-
-
-
-void print_paths(const std::vector<std::vector<size_t>>& paths, const std::vector<std::string> & names)
+map<string, map<int, vector<vector<size_t>>>> shortestToAllWithPathes(const vector<vector<double>>& map, const vector<string>& names, string origin)
 {
-    for (int i = 0; i < paths.size(); i ++)
-    {
-        
-    }
+    std::map<string, std::map<int, vector<vector<size_t>>>> allPaths;
     
+    std::map<string, int> visited;
+    std::map<string, int> unvisited;
+    std::map<string, vector<vector<size_t>>> paths;
     
-}
-
-
-void findShortestToAll(const vector<vector<double>>& map, const vector<string>& names, string origin)
-{
+    vector<string> nodeHistory;
     
-    std::map<string,int> visited;
-    std::map<string,int> unvisited;
+    int maxSteps = 0;
     
     auto iter1 = find(names.begin(), names.end(), origin);
     int currIndex = iter1-names.begin();
@@ -67,10 +46,11 @@ void findShortestToAll(const vector<vector<double>>& map, const vector<string>& 
             unvisited.insert(pair<string, int>(names[i], 10001));
         }
     }
-   
     
-    // start of step 1 //
+    // start of step 1 (adding origin to visited list) //
     string current = origin;
+    vector<size_t> originPath;
+    originPath.push_back(currIndex);
     
     for (int i = 0; i < names.size(); i++)
     {
@@ -88,16 +68,23 @@ void findShortestToAll(const vector<vector<double>>& map, const vector<string>& 
     }
     
     visited.insert(pair<string, int>(current, unvisited[current]));
+    paths.insert(pair<string,vector<vector<size_t>>>(current, vector<vector<size_t>>()));
+    paths[current].push_back(originPath);
+    
     auto it = unvisited.find(current);
     unvisited.erase(it);
+    nodeHistory.push_back(current);
     
-    // end of step 1
+    // end of step 1 //
+    
     
     // start of step 2 //
+    
+    while (maxSteps != names.size()-1) {
+        
     int max = 10001;
     
-    // find next min node
-    
+    // find next min node //
     for (int i = 0; i < names.size(); i++)
     {
         if (visited.find(names[i]) == visited.end())
@@ -111,10 +98,11 @@ void findShortestToAll(const vector<vector<double>>& map, const vector<string>& 
     }
     
     
+    // find current index //
     iter1 = find(names.begin(), names.end(), current);
     currIndex = iter1-names.begin();
     
-    
+    // update unvisited node values //
     for (int i = 0; i < names.size(); i++)
     {
             if (unvisited.find(names[i]) != unvisited.end())
@@ -130,207 +118,106 @@ void findShortestToAll(const vector<vector<double>>& map, const vector<string>& 
             
     }
     
+    
+    // check paths //
+    
+        
+    for (int i = nodeHistory.size()-1; i != -1; i--)
+    {
+        int j = 0;
+            
+        auto namePtr = find(names.begin(), names.end(), nodeHistory[i]);
+        int nameIndex = namePtr-names.begin();
+            
+        if (map[nameIndex][currIndex] != 0 && visited[nodeHistory[i]] + map[nameIndex][currIndex] == unvisited[current])
+        {
+            paths.insert(pair<string,vector<vector<size_t>>>(current, vector<vector<size_t>>()));
+                
+            while (j != paths[nodeHistory[i]].size())
+            {
+                paths[current].push_back(paths[nodeHistory[i]][j]);
+                j++;
+            }
+        }
+        
+    }
+        
+    for (int k = 0; k < paths[current].size(); k++)
+    {
+        paths[current][k].push_back(currIndex);
+    }
+        
+        
+    // update visited and unvisited lists //
     visited.insert(pair<string, int>(current, unvisited[current]));
     auto it2 = unvisited.find(current);
     unvisited.erase(it2);
+    nodeHistory.push_back(current);
+    maxSteps++;
+}
+    
+    // end of steps 2 to number of names //
+    
+    for (int i = 0; i < names.size(); i++)
+    {
+        allPaths.insert(make_pair(names[i], std::map<int, vector<vector<size_t>>>()));
+        allPaths[names[i]].insert(make_pair(visited[names[i]], paths[names[i]]));
+    }
+    
+    
+    return allPaths;
+    
+}
 
-    // end of step 2
-    
-    
-    // start of step 3
-    max = 10001;
-    
-    // find next min node
-    
-    for (int i = 0; i < names.size(); i++)
-    {
-        if (visited.find(names[i]) == visited.end())
-        {
-            if (unvisited[names[i]] < max && unvisited[names[i]] != 0)
-            {
-                current = names[i];
-                max = unvisited[names[i]];
-            }
-        }
-    }
-    
-    
-    iter1 = find(names.begin(), names.end(), current);
-    currIndex = iter1-names.begin();
-    
-    
-    for (int i = 0; i < names.size(); i++)
-    {
-            if (unvisited.find(names[i]) != unvisited.end())
-            {
-                int oldVal = unvisited[names[i]];
-                int newVal = unvisited[current] + map[currIndex][i];
-                
-                if (map[currIndex][i] != 0)
-                {
-                    unvisited[names[i]] = min(oldVal, newVal);
-                }
-            }
-            
-    }
-    
-    visited.insert(pair<string, int>(current, unvisited[current]));
-    auto it3 = unvisited.find(current);
-    unvisited.erase(it3);
-    
-    // end of step 3
 
+vector<vector<size_t>> dijkstra(const vector<vector<double>>& map, const vector<string>& names, string origin, string target, double& cost) {
+  
     
-    // start of step 4
-    max = 10001;
+    std::map<string, std::map<int, vector<vector<size_t>>>> allPaths = shortestToAllWithPathes(map, names, origin);
     
-    // find next min node
+    std::map<int, vector<vector<size_t>>> info = allPaths[target];
     
-    for (int i = 0; i < names.size(); i++)
+    if ((info.begin()->second).empty() == true)
     {
-        if (visited.find(names[i]) == visited.end())
+        cost = -1;
+    }
+    else
+    {
+        cost = info.begin()->first;
+    }
+    
+    vector<vector<size_t>> destinationInfo;
+    
+    destinationInfo = info.begin()->second;
+
+    return destinationInfo;
+}
+
+
+void print_paths(const std::vector<std::vector<size_t>>& paths, const std::vector<std::string> & names)
+{
+    
+    if (paths.size() == 0)
+    {
+        cout << "No path found!" << endl;
+    }
+    
+    int line = 0;
+    
+    while (line != paths.size())
+    {
+        for (int i = 0 ; i < paths[line].size(); i++)
         {
-            if (unvisited[names[i]] < max && unvisited[names[i]] != 0)
-            {
-                current = names[i];
-                max = unvisited[names[i]];
+            
+            cout << names[paths[line][i]];
+            
+            if (i != paths[line].size()-1) {
+                
+                cout << "--";
             }
         }
+        cout << endl;
+        line++;
     }
-    
-    
-    iter1 = find(names.begin(), names.end(), current);
-    currIndex = iter1-names.begin();
-    
-    
-    for (int i = 0; i < names.size(); i++)
-    {
-            if (unvisited.find(names[i]) != unvisited.end())
-            {
-                int oldVal = unvisited[names[i]];
-                int newVal = unvisited[current] + map[currIndex][i];
-                
-                if (map[currIndex][i] != 0)
-                {
-                    unvisited[names[i]] = min(oldVal, newVal);
-                }
-            }
-            
-    }
-    
-    visited.insert(pair<string, int>(current, unvisited[current]));
-    auto it4 = unvisited.find(current);
-    unvisited.erase(it4);
-    
-    // end of step 4
-    
-    
-    // start of step 5
-    max = 10001;
-    
-    // find next min node
-    
-    for (int i = 0; i < names.size(); i++)
-    {
-        if (visited.find(names[i]) == visited.end())
-        {
-            if (unvisited[names[i]] < max && unvisited[names[i]] != 0)
-            {
-                current = names[i];
-                max = unvisited[names[i]];
-            }
-        }
-    }
-    
-    
-    iter1 = find(names.begin(), names.end(), current);
-    currIndex = iter1-names.begin();
-    
-    
-    for (int i = 0; i < names.size(); i++)
-    {
-            if (unvisited.find(names[i]) != unvisited.end())
-            {
-                int oldVal = unvisited[names[i]];
-                int newVal = unvisited[current] + map[currIndex][i];
-                
-                if (map[currIndex][i] != 0)
-                {
-                    unvisited[names[i]] = min(oldVal, newVal);
-                }
-            }
-            
-    }
-    
-    visited.insert(pair<string, int>(current, unvisited[current]));
-    auto it5 = unvisited.find(current);
-    unvisited.erase(it5);
-    
-    // end of step 5
-    
-    
-    // start of step 6
-    max = 10001;
-    
-    // find next min node
-    
-    for (int i = 0; i < names.size(); i++)
-    {
-        if (visited.find(names[i]) == visited.end())
-        {
-            if (unvisited[names[i]] < max && unvisited[names[i]] != 0)
-            {
-                current = names[i];
-                max = unvisited[names[i]];
-            }
-        }
-    }
-    
-    
-    iter1 = find(names.begin(), names.end(), current);
-    currIndex = iter1-names.begin();
-    
-    
-    for (int i = 0; i < names.size(); i++)
-    {
-            if (unvisited.find(names[i]) != unvisited.end())
-            {
-                int oldVal = unvisited[names[i]];
-                int newVal = unvisited[current] + map[currIndex][i];
-                
-                if (map[currIndex][i] != 0)
-                {
-                    unvisited[names[i]] = min(oldVal, newVal);
-                }
-            }
-            
-    }
-    
-    visited.insert(pair<string, int>(current, unvisited[current]));
-    auto it6 = unvisited.find(current);
-    unvisited.erase(it6);
-    
-    // end of step 6
-    
-    
-    
-    
-    
-    // print function to see
-   
-    for (auto it = unvisited.begin(); it != unvisited.end(); ++it)
-    {
-        std::cout << it->first << " " << it->second << std::endl;
-    }
-     
-    std::cout << std::endl;
-    
-    for (auto it = visited.begin(); it != visited.end(); ++it)
-    {
-        std::cout << it->first << " " << it->second << std::endl;
-    }
-    
-    
-    std::cout << current;
     
 }
